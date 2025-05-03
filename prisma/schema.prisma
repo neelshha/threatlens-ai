@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  title     String   @default("Untitled Threat Report")
+  content   String
+  summary   String
+  iocs      String[] @default([])
+  mitreTags String[] @default([])
+  createdAt DateTime @default(now())
+}

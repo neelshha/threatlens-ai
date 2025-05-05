@@ -7,7 +7,7 @@ interface PageProps {
   };
 }
 
-const Page: NextPage<PageProps> = ({ params }) => {
+const Page: NextPage<PageProps> = ({ params }: { params: { id: string } }) => {
   return <ReportEditorClient params={params} />;
 };
 

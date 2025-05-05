@@ -1,11 +1,9 @@
-import dynamic from 'next/dynamic';
-
-const ReportEditor = dynamic(() => import('@/components/ReportEditor'), { ssr: false });
+import ReportEditorClient from '@/components/client/ReportEditorClient';
 
 interface PageProps {
   params: { id: string };
 }
 
 export default function Page({ params }: PageProps) {
-  return <ReportEditor params={params} />;
+  return <ReportEditorClient params={params} />;
 }

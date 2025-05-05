@@ -8,7 +8,7 @@ import { FormattedDate } from '@/components/FormattedDate';
 import { useDebouncedCallback } from 'use-debounce';
 import { Document, Packer, Paragraph, HeadingLevel } from 'docx';
 import { toast } from 'react-hot-toast';
-import { ReportTags } from '@/components/ReportTags'; // Ensure correct path
+import { ReportTags } from '@/components/ReportTags';
 import { Download, Trash } from 'lucide-react';
 
 const mitreRegex = /^T\d{4}(\.\d{3})?$/;
@@ -194,13 +194,7 @@ export default function ReportEditor({ id }: ReportEditorProps) {
               Add
             </button>
           </div>
-          {(editableIOCs.length > 0 || (report && report.iocs.length > 0)) && (
-            <ReportTags
-              iocs={editableIOCs}
-              onRemove={removeTag}
-              type="ioc"
-            />
-          )}
+          <ReportTags iocs={editableIOCs} onRemove={removeTag} type="ioc" />
         </div>
 
         <div className="mb-6">
@@ -220,13 +214,7 @@ export default function ReportEditor({ id }: ReportEditorProps) {
               Add
             </button>
           </div>
-          {(editableMitreTags.length > 0 || (report && report.mitreTags.length > 0)) && (
-            <ReportTags
-              mitreTags={editableMitreTags}
-              onRemove={removeTag}
-              type="mitre"
-            />
-          )}
+          <ReportTags mitreTags={editableMitreTags} onRemove={removeTag} type="mitre" />
         </div>
 
         <div className="mb-8">

@@ -19,7 +19,6 @@
     "docx": "^9.4.1",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.3",
-    "json2csv": "^6.0.0-alpha.2",
     "jspdf": "^3.0.1",
     "lucide-react": "^0.507.0",
     "next": "^15.3.1",

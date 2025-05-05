@@ -1,5 +1,7 @@
 import ReportEditorClient from '@/components/client/ReportEditorClient';
 
-export default function Page({ params }: { params: { id: string } }) {
-  return <ReportEditorClient reportId={params.id} />;
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  return <ReportEditorClient reportId={id} />;
 }

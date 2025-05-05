@@ -4,6 +4,6 @@ interface PageProps {
   params: { id: string };
 }
 
-export default function Page({ params }: PageProps) {
+export default async function Page({ params }: PageProps) {
   return <ReportEditorClient params={params} />;
 }

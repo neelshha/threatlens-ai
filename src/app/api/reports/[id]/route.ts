@@ -1,6 +1,6 @@
 // src/app/api/reports/[id]/route.ts
 
-import { prisma } from '@/app/prisma';
+import { prisma } from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 
 // GET /api/reports/[id]

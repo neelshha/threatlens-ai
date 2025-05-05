@@ -1,18 +1,28 @@
-// src/app/api/reports/[id]/route.ts
-
 import { prisma } from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+
+async function getUserId() {
+  const session = await getServerSession(authOptions);
+  return session?.user?.id || null;
+}
 
 // GET /api/reports/[id]
 export async function GET(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  if (!id) {
-    return NextResponse.json({ error: 'Missing report ID' }, { status: 400 });
+  const userId = await getUserId();
+
+  if (!id || !userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const report = await prisma.report.findUnique({
-      where: { id },
+    const report = await prisma.report.findFirst({
+      where: {
+        id,
+        userId, // 👈 restrict access to owner
+      },
       include: {
         iocs: true,
         mitreTags: true,
@@ -20,7 +30,7 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
     });
 
     if (!report) {
-      return NextResponse.json({ error: 'Report not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Report not found or access denied' }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -37,11 +47,18 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
 // PATCH /api/reports/[id]
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  if (!id) {
-    return NextResponse.json({ error: 'Missing report ID' }, { status: 400 });
+  const userId = await getUserId();
+
+  if (!id || !userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
+    const existing = await prisma.report.findUnique({ where: { id } });
+    if (!existing || existing.userId !== userId) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
     const { title, summary, content, iocs = [], mitreTags = [] } = await req.json();
 
     const updated = await prisma.$transaction(async (tx) => {
@@ -82,11 +99,18 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 // DELETE /api/reports/[id]
 export async function DELETE(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  if (!id) {
-    return NextResponse.json({ error: 'Missing report ID' }, { status: 400 });
+  const userId = await getUserId();
+
+  if (!id || !userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
+    const existing = await prisma.report.findUnique({ where: { id } });
+    if (!existing || existing.userId !== userId) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
     await prisma.report.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (err) {

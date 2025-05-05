@@ -2,7 +2,6 @@
 
 import dynamic from 'next/dynamic';
 import type { FC } from 'react';
-import { useState, useEffect } from 'react';
 
 interface ReportEditorClientProps {
   reportId: string;

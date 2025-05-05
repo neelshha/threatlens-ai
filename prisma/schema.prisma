@@ -8,23 +8,26 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   password  String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
-  // optional: link to reports created by user (if needed in future)
-  // reports   Report[] 
+  reports   Report[]  // One-to-many: User can have many Reports
 }
 
 model Report {
-  id        String      @id @default(cuid())
-  title     String
-  summary   String
-  content   String
-  createdAt DateTime    @default(now())
-  iocs      Ioc[]       @relation("ReportIOCs")
-  mitreTags MitreTag[]  @relation("ReportMitres")
+  id         String      @id @default(cuid())
+  title      String
+  summary    String
+  content    String
+  createdAt  DateTime    @default(now())
+  
+  userId     String
+  user       User        @relation(fields: [userId], references: [id])
+
+  iocs       Ioc[]       @relation("ReportIOCs")
+  mitreTags  MitreTag[]  @relation("ReportMitres")
 }
 
 model Ioc {

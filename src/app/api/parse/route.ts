@@ -1,11 +1,13 @@
+// src/app/api/parse/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const API_KEY = process.env.OPENROUTER_API_KEY;
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'mistralai/mistral-7b-instruct';
 
-// Utility to clean list-like strings
 const cleanListItems = (text: string | undefined | null, pattern: RegExp): string[] => {
   if (!text) return [];
   return text
@@ -14,7 +16,6 @@ const cleanListItems = (text: string | undefined | null, pattern: RegExp): strin
     .filter(item => item && pattern.test(item));
 };
 
-// Fallback IOC extractor
 const extractFallbackIOCs = (text: string): string[] => {
   const patterns = [
     /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::\d{2,5})?\b/g, // IPs
@@ -30,6 +31,13 @@ const extractFallbackIOCs = (text: string): string[] => {
 };
 
 export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   if (!API_KEY) {
     return NextResponse.json({ error: 'Missing OpenRouter API Key' }, { status: 500 });
   }
@@ -81,7 +89,6 @@ Report Text:\n"""\n${plainTextContent}\n"""`.trim();
     if (process.env.NODE_ENV === 'development') {
       console.log('🧠 AI Output:\n', aiOutput);
     }
-
   } catch (e) {
     console.error('❌ AI service error:', e);
     return NextResponse.json({ error: 'AI service failure' }, { status: 502 });
@@ -108,6 +115,7 @@ Report Text:\n"""\n${plainTextContent}\n"""`.trim();
         title,
         summary,
         content: plainTextContent,
+        userId, // 🔐 assigned from session
         iocs: {
           create: iocs.map(value => ({ value }))
         },

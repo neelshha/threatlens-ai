@@ -10,15 +10,19 @@ export const authOptions: NextAuthOptions = {
   ],
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async session({ session, token }) {
-      (session as any).userId = token.sub;
-      return session;
-    },
-    async jwt({ token, account }) {
+    async jwt({ token, account, user }) {
+      // Attach the Google user ID to token
       if (account) {
         token.id = account.providerAccountId;
       }
       return token;
+    },
+    async session({ session, token }) {
+      // Ensure session.user.id is available
+      if (session.user) {
+        session.user.id = token.id as string;
+      }
+      return session;
     },
   },
 };

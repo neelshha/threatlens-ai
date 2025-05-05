@@ -1,4 +1,3 @@
-// src/app/api/parse/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
@@ -25,7 +24,6 @@ const extractFallbackIOCs = (text: string): string[] => {
     /\b(?:hxxp|https?):\/\/[^\s"']+/gi,                // URLs
     /\b(?:[a-z0-9-]+\.)+[a-z]{2,}/gi                   // Domains
   ];
-
   const matches = patterns.flatMap(p => [...text.matchAll(p)].map(m => m[0]));
   return [...new Set(matches)].filter(ioc => ioc.length > 4);
 };
@@ -42,17 +40,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Missing OpenRouter API Key' }, { status: 500 });
   }
 
-  let content: string | object = '';
+  let content = '';
   try {
     const body = await req.json();
-    content = body.content;
+    content = typeof body.content === 'string' ? body.content : JSON.stringify(body.content);
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const plainTextContent = typeof content === 'string' ? content : JSON.stringify(content);
-
-  if (!plainTextContent || plainTextContent.length < 50) {
+  if (!content || content.length < 50) {
     return NextResponse.json({ error: 'Report too short or empty' }, { status: 400 });
   }
 
@@ -65,10 +61,13 @@ IOCs:
 MITRE:
 - <Txxxx>
 
-Report Text:\n"""\n${plainTextContent}\n"""`.trim();
+Report Text:\n"""\n${content}\n"""`;
 
   let aiOutput = '';
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
     const res = await fetch(API_URL, {
       method: 'POST',
       headers: {
@@ -80,8 +79,15 @@ Report Text:\n"""\n${plainTextContent}\n"""`.trim();
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 500,
         temperature: 0.3
-      })
-    });
+      }),
+      signal: controller.signal
+    }).finally(() => clearTimeout(timeout));
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('❌ OpenRouter API error:', res.status, errText);
+      return NextResponse.json({ error: 'OpenRouter API failure', details: errText }, { status: res.status });
+    }
 
     const data = await res.json();
     aiOutput = data.choices?.[0]?.message?.content?.trim() || '';
@@ -89,9 +95,10 @@ Report Text:\n"""\n${plainTextContent}\n"""`.trim();
     if (process.env.NODE_ENV === 'development') {
       console.log('🧠 AI Output:\n', aiOutput);
     }
-  } catch (e) {
-    console.error('❌ AI service error:', e);
-    return NextResponse.json({ error: 'AI service failure' }, { status: 502 });
+
+  } catch (error) {
+    console.error('❌ AI service timeout or failure:', error);
+    return NextResponse.json({ error: 'AI service timeout/failure' }, { status: 502 });
   }
 
   const title = aiOutput.match(/^Title[:\-]\s*(.*)/im)?.[1]?.trim() || 'Untitled Report';
@@ -101,12 +108,12 @@ Report Text:\n"""\n${plainTextContent}\n"""`.trim();
 
   let iocs = cleanListItems(iocRaw, /.+/);
   if (iocs.includes('None Found') || iocs.length === 0) {
-    iocs = extractFallbackIOCs(plainTextContent);
+    iocs = extractFallbackIOCs(content);
   }
 
   let mitreTags = cleanListItems(mitreRaw, /^T\d{4}(\.\d{3})?$/);
   if (mitreTags.includes('None Found') || mitreTags.length === 0) {
-    mitreTags = [...new Set([...plainTextContent.matchAll(/\bT\d{4}(?:\.\d{3})?\b/g)].map(m => m[0]))];
+    mitreTags = [...new Set([...content.matchAll(/\bT\d{4}(?:\.\d{3})?\b/g)].map(m => m[0]))];
   }
 
   try {
@@ -114,20 +121,16 @@ Report Text:\n"""\n${plainTextContent}\n"""`.trim();
       data: {
         title,
         summary,
-        content: plainTextContent,
-        userId, // 🔐 assigned from session
-        iocs: {
-          create: iocs.map(value => ({ value }))
-        },
-        mitreTags: {
-          create: mitreTags.map(value => ({ value }))
-        }
+        content,
+        userId,
+        iocs: { create: iocs.map(value => ({ value })) },
+        mitreTags: { create: mitreTags.map(value => ({ value })) }
       }
     });
 
     return NextResponse.json({ summary, reportId: report.id });
   } catch (e: any) {
-    console.error('❌ Prisma Error:', e);
-    return NextResponse.json({ error: 'Failed to save to database', details: e.message }, { status: 500 });
+    console.error('❌ Prisma Save Error:', e);
+    return NextResponse.json({ error: 'Database error', details: e.message }, { status: 500 });
   }
 }

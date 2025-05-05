@@ -17,28 +17,23 @@ const cleanListItems = (text: string | undefined | null, pattern: RegExp): strin
 
 const extractFallbackIOCs = (text: string): string[] => {
   const patterns = [
-    /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::\d{2,5})?\b/g, // IPs
-    /\b[a-f0-9]{32}\b/gi,                              // MD5
-    /\b[a-f0-9]{40}\b/gi,                              // SHA1
-    /\b[a-f0-9]{64}\b/gi,                              // SHA256
-    /\b(?:hxxp|https?):\/\/[^\s"']+/gi,                // URLs
-    /\b(?:[a-z0-9-]+\.)+[a-z]{2,}/gi                   // Domains
+    /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::\d{2,5})?\b/g,
+    /\b[a-f0-9]{32}\b/gi,
+    /\b[a-f0-9]{40}\b/gi,
+    /\b[a-f0-9]{64}\b/gi,
+    /\b(?:hxxp|https?):\/\/[^\s"']+/gi,
+    /\b(?:[a-z0-9-]+\.)+[a-z]{2,}/gi
   ];
-  const matches = patterns.flatMap(p => [...text.matchAll(p)].map(m => m[0]));
-  return [...new Set(matches)].filter(ioc => ioc.length > 4);
+  return [...new Set(patterns.flatMap(p => [...text.matchAll(p)].map(m => m[0])))]
+    .filter(ioc => ioc.length > 4);
 };
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  if (!API_KEY) {
-    return NextResponse.json({ error: 'Missing OpenRouter API Key' }, { status: 500 });
-  }
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!API_KEY) return NextResponse.json({ error: 'Missing OpenRouter API Key' }, { status: 500 });
 
   let content = '';
   try {
@@ -81,23 +76,30 @@ Report Text:\n"""\n${content}\n"""`;
         temperature: 0.3
       }),
       signal: controller.signal
-    }).finally(() => clearTimeout(timeout));
+    });
+
+    clearTimeout(timeout);
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error('❌ OpenRouter API error:', res.status, errText);
-      return NextResponse.json({ error: 'OpenRouter API failure', details: errText }, { status: res.status });
+      console.error('❌ OpenRouter error:', res.status, errText);
+      return NextResponse.json({ error: 'OpenRouter API failed', details: errText }, { status: res.status });
     }
 
     const data = await res.json();
     aiOutput = data.choices?.[0]?.message?.content?.trim() || '';
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🧠 AI Output:\n', aiOutput);
+    if (!aiOutput) {
+      console.warn('⚠️ Empty AI response');
+      return NextResponse.json({ error: 'Empty AI response' }, { status: 500 });
     }
 
-  } catch (error) {
-    console.error('❌ AI service timeout or failure:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🧠 AI Output:', aiOutput);
+    }
+
+  } catch (err) {
+    console.error('❌ AI timeout or fetch error:', err);
     return NextResponse.json({ error: 'AI service timeout/failure' }, { status: 502 });
   }
 
@@ -107,16 +109,17 @@ Report Text:\n"""\n${content}\n"""`;
   const mitreRaw = aiOutput.match(/^MITRE[:\-]\s*([\s\S]*)$/im)?.[1] || '';
 
   let iocs = cleanListItems(iocRaw, /.+/);
-  if (iocs.includes('None Found') || iocs.length === 0) {
+  if (iocs.length === 0 || iocs.includes('None Found')) {
     iocs = extractFallbackIOCs(content);
   }
 
   let mitreTags = cleanListItems(mitreRaw, /^T\d{4}(\.\d{3})?$/);
-  if (mitreTags.includes('None Found') || mitreTags.length === 0) {
+  if (mitreTags.length === 0 || mitreTags.includes('None Found')) {
     mitreTags = [...new Set([...content.matchAll(/\bT\d{4}(?:\.\d{3})?\b/g)].map(m => m[0]))];
   }
 
   try {
+    console.log('✨ Creating report for user:', userId);
     const report = await prisma.report.create({
       data: {
         title,
@@ -130,7 +133,7 @@ Report Text:\n"""\n${content}\n"""`;
 
     return NextResponse.json({ summary, reportId: report.id });
   } catch (e: any) {
-    console.error('❌ Prisma Save Error:', e);
+    console.error('❌ DB save error:', e);
     return NextResponse.json({ error: 'Database error', details: e.message }, { status: 500 });
   }
 }

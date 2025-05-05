@@ -2,6 +2,10 @@
 
 import ReportEditor from '@/components/ReportEditor';
 
-export default function Page({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: { id: string };
+}
+
+export default function Page({ params }: PageProps) {
   return <ReportEditor params={params} />;
 }

@@ -2,8 +2,10 @@ import { prisma } from '@/app/prisma';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export async function GET(req: NextRequest, context: { params: { id: string } }) {
-  const { id } = context.params;
+type RouteParams = { params: Record<string, string> };
+
+export async function GET(req: NextRequest, { params }: RouteParams) {
+  const { id } = params;
 
   try {
     const report = await prisma.report.findUnique({
@@ -29,14 +31,11 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
   }
 }
 
-export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
-  const { id } = context.params;
+export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  const { id } = params;
 
   try {
-    await prisma.report.delete({
-      where: { id },
-    });
-
+    await prisma.report.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('DELETE error:', err);
@@ -44,8 +43,8 @@ export async function DELETE(req: NextRequest, context: { params: { id: string }
   }
 }
 
-export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
-  const { id } = context.params;
+export async function PATCH(req: NextRequest, { params }: RouteParams) {
+  const { id } = params;
 
   try {
     const { title, summary, content, iocs = [], mitreTags = [] } = await req.json();

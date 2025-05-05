@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { useSession, signIn, signOut } from 'next-auth/react';
 import { Menu, X } from 'lucide-react';
 import useSWR from 'swr';
 
@@ -17,6 +18,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
+  const { data: session, status } = useSession();
 
   const { data: recentReports = [] } = useSWR<Report[]>('/api/reports', fetcher);
 
@@ -62,7 +64,8 @@ const Navbar = () => {
               Dashboard
             </Link>
           </nav>
-          <div className="flex flex-col mt-6 flex-1">
+
+          <div className="flex flex-col mt-6 flex-1 overflow-hidden">
             <h3 className="text-xs font-semibold text-neutral-500 uppercase mb-2 px-2">Recent Reports</h3>
             <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
               {recentReports.map((report) => (
@@ -76,6 +79,29 @@ const Navbar = () => {
                 </Link>
               ))}
             </div>
+          </div>
+
+          {/* Auth Section */}
+          <div className="mt-6 px-2 text-sm">
+            {status === 'authenticated' ? (
+              <div className="flex flex-col gap-2 text-white">
+                <span className="text-xs text-neutral-400">Signed in as</span>
+                <span className="font-medium truncate">{session.user?.email}</span>
+                <button
+                  onClick={() => signOut()}
+                  className="mt-2 px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded-md text-white transition"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => signIn('google')}
+                className="w-full mt-2 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 rounded-md text-white transition"
+              >
+                Sign In with Google
+              </button>
+            )}
           </div>
         </div>
       </aside>
@@ -110,6 +136,28 @@ const Navbar = () => {
             <Link href="/" className={getLinkClasses('/', mobileLinkBase, mobileLinkActive, mobileLinkInactive)} onClick={toggleMobileMenu}>Home</Link>
             <Link href="/dashboard" className={getLinkClasses('/dashboard', mobileLinkBase, mobileLinkActive, mobileLinkInactive)} onClick={toggleMobileMenu}>Dashboard</Link>
           </nav>
+
+          {/* Auth Controls */}
+          <div className="mt-8 border-t border-neutral-800 pt-6">
+            {status === 'authenticated' ? (
+              <div className="text-sm text-white">
+                <p className="mb-2">Signed in as <span className="font-medium">{session.user?.email}</span></p>
+                <button
+                  onClick={() => { toggleMobileMenu(); signOut(); }}
+                  className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => { toggleMobileMenu(); signIn('google'); }}
+                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm"
+              >
+                Sign In with Google
+              </button>
+            )}
+          </div>
         </aside>
       </div>
 

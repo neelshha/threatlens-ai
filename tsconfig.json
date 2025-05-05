@@ -14,9 +14,9 @@
     "jsx": "preserve",
     "incremental": true,
     "types": ["node"],
-    "baseUrl": "src",
+    "baseUrl": "src", // ✅ remains the same
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"] // ✅ resolves to /src/*
     },
     "plugins": [
       {

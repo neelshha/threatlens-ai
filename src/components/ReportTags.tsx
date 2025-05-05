@@ -1,7 +1,7 @@
 // src/components/ReportTags.tsx
 
-import { getIOCType } from '@/lib/iocUtils';
-import { mitreDescriptions } from '@/lib/mitreTags';
+import { getIOCType } from '../lib/iocUtils';
+import { mitreDescriptions } from '../lib/mitreTags';
 
 export function ReportTags({ iocs = [], mitreTags = [] }: { iocs?: string[]; mitreTags?: string[] }) {
   return (

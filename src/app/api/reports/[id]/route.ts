@@ -1,79 +1,88 @@
 import { prisma } from '@/app/prisma';
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// GET: Fetch a report by ID
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, context: { params: { id: string } }) {
+  const { id } = context.params;
+
   try {
     const report = await prisma.report.findUnique({
-      where: { id: params.id },
+      where: { id },
+      include: {
+        iocs: true,
+        mitreTags: true,
+      },
     });
 
     if (!report) {
       return NextResponse.json({ error: 'Report not found' }, { status: 404 });
     }
 
-    return NextResponse.json(report);
+    return NextResponse.json({
+      ...report,
+      iocs: report.iocs.map(i => i.value),
+      mitreTags: report.mitreTags.map(t => t.value),
+    });
   } catch (err) {
-    console.error('GET /api/reports/[id] failed:', err);
+    console.error('GET error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// DELETE: Delete a report by ID
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
+  const { id } = context.params;
+
   try {
-    await prisma.report.delete({
-      where: { id: params.id },
-    });
+    // Since you have onDelete: Cascade in your schema, you can directly delete the report
+    // and all related records will be automatically deleted
+    await prisma.report.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('DELETE /api/reports/[id] failed:', err);
-    return NextResponse.json({ error: 'Failed to delete report' }, { status: 500 });
+    console.error('DELETE error:', err);
+    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
   }
 }
 
-// PATCH: Update title, summary, IOCs, or MITRE tags
-export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
+  const { id } = context.params;
+
   try {
-    const body = await req.json();
-    const { title, summary, iocs, mitreTags } = body;
+    const { title, summary, content, iocs = [], mitreTags = [] } = await req.json();
 
-    const updatePayload: any = {};
+    // Using a transaction to ensure all operations succeed or fail together
+    const updated = await prisma.$transaction(async (tx) => {
+      // Remove existing tags before re-adding
+      await tx.ioc.deleteMany({ where: { reportId: id } });
+      await tx.mitreTag.deleteMany({ where: { reportId: id } });
 
-    if (typeof title === 'string') {
-      updatePayload.title = title.trim();
-    }
-
-    if (typeof summary === 'string') {
-      updatePayload.summary = summary.trim();
-    }
-
-    if (Array.isArray(iocs)) {
-      updatePayload.iocs = iocs.map(i => i.trim()).filter(i => i);
-    }
-
-    if (Array.isArray(mitreTags)) {
-      updatePayload.mitreTags = mitreTags.map(t => t.trim()).filter(t => t);
-    }
-
-    const updatedReport = await prisma.report.update({
-      where: { id: params.id },
-      data: updatePayload,
+      return tx.report.update({
+        where: { id },
+        data: {
+          title,
+          summary,
+          content,
+          iocs: {
+            create: iocs.filter(Boolean).map((val: string) => ({ value: val })),
+          },
+          mitreTags: {
+            create: mitreTags.filter(Boolean).map((val: string) => ({ value: val })),
+          },
+        },
+        include: {
+          iocs: true,
+          mitreTags: true,
+        },
+      });
     });
 
-    return NextResponse.json(updatedReport);
+    return NextResponse.json({
+      ...updated,
+      iocs: updated.iocs.map(i => i.value),
+      mitreTags: updated.mitreTags.map(t => t.value),
+    });
   } catch (err) {
-    console.error('PATCH /api/reports/[id] failed:', err);
+    console.error('PATCH error:', err);
     return NextResponse.json({ error: 'Failed to update report' }, { status: 500 });
   }
 }

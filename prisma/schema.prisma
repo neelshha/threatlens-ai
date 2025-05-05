@@ -7,12 +7,36 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Report {
+model User {
   id        String   @id @default(cuid())
-  title     String   @default("Untitled Threat Report")
-  content   String
-  summary   String
-  iocs      String[] @default([])
-  mitreTags String[] @default([])
+  email     String   @unique
+  password  String
   createdAt DateTime @default(now())
+
+  // optional: link to reports created by user (if needed in future)
+  // reports   Report[] 
+}
+
+model Report {
+  id        String      @id @default(cuid())
+  title     String
+  summary   String
+  content   String
+  createdAt DateTime    @default(now())
+  iocs      Ioc[]       @relation("ReportIOCs")
+  mitreTags MitreTag[]  @relation("ReportMitres")
+}
+
+model Ioc {
+  id        String   @id @default(cuid())
+  value     String
+  reportId  String
+  report    Report   @relation("ReportIOCs", fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+model MitreTag {
+  id        String   @id @default(cuid())
+  value     String
+  reportId  String
+  report    Report   @relation("ReportMitres", fields: [reportId], references: [id], onDelete: Cascade)
 }

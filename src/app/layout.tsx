@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import Navbar from '@/components/Navbar';
-import { Toaster } from 'react-hot-toast';
+import ClientLayout from '@/components/ClientLayout';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -28,12 +27,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
-      <head />
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}>
-        <Toaster />
-
-          <Navbar />
-          <main className="md:ml-64">{children}</main>
+        <ClientLayout>
+          {children}
+        </ClientLayout>
       </body>
     </html>
   );

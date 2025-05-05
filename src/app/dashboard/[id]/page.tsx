@@ -1,9 +1,12 @@
 import ReportEditorClient from '@/components/client/ReportEditorClient';
+import { NextPage } from 'next';
 
 interface PageProps {
   params: { id: string };
 }
 
-export default function Page({ params }: { params: { id: string } }) {
+const Page: NextPage<PageProps> = ({ params }) => {
   return <ReportEditorClient params={params} />;
-}
+};
+
+export default Page;

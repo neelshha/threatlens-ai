@@ -1,14 +1,6 @@
-// types/next-auth.d.ts
-import NextAuth, { DefaultSession, DefaultUser } from 'next-auth';
+import NextAuth from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
-declare module 'next-auth' {
-  interface Session extends DefaultSession {
-    user: {
-      id: string;
-    } & DefaultSession['user'];
-  }
+const handler = NextAuth(authOptions);
 
-  interface User extends DefaultUser {
-    id: string;
-  }
-}
+export { handler as GET, handler as POST };

@@ -1,4 +1,3 @@
-// ✅ UPDATED: src/app/api/parse/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/prisma';
 
@@ -6,6 +5,7 @@ const API_KEY = process.env.OPENROUTER_API_KEY;
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'mistralai/mistral-7b-instruct';
 
+// Utility to clean list-like strings
 const cleanListItems = (text: string | undefined | null, pattern: RegExp): string[] => {
   if (!text) return [];
   return text
@@ -14,14 +14,15 @@ const cleanListItems = (text: string | undefined | null, pattern: RegExp): strin
     .filter(item => item && pattern.test(item));
 };
 
+// Fallback IOC extractor
 const extractFallbackIOCs = (text: string): string[] => {
   const patterns = [
-    /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::\d{2,5})?\b/g, // IPs and optional ports
-    /\b[a-f0-9]{32}\b/gi, // MD5
-    /\b[a-f0-9]{40}\b/gi, // SHA1
-    /\b[a-f0-9]{64}\b/gi, // SHA256
-    /\b(?:hxxp|https?):\/\/[^\s"']+/gi, // URLs
-    /\b(?:[a-z0-9-]+\.)+[a-z]{2,}/gi // Domains
+    /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::\d{2,5})?\b/g, // IPs
+    /\b[a-f0-9]{32}\b/gi,                              // MD5
+    /\b[a-f0-9]{40}\b/gi,                              // SHA1
+    /\b[a-f0-9]{64}\b/gi,                              // SHA256
+    /\b(?:hxxp|https?):\/\/[^\s"']+/gi,                // URLs
+    /\b(?:[a-z0-9-]+\.)+[a-z]{2,}/gi                   // Domains
   ];
 
   const matches = patterns.flatMap(p => [...text.matchAll(p)].map(m => m[0]));
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Missing OpenRouter API Key' }, { status: 500 });
   }
 
-  let content = '';
+  let content: string | object = '';
   try {
     const body = await req.json();
     content = body.content;
@@ -41,7 +42,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  if (!content || content.length < 50) {
+  const plainTextContent = typeof content === 'string' ? content : JSON.stringify(content);
+
+  if (!plainTextContent || plainTextContent.length < 50) {
     return NextResponse.json({ error: 'Report too short or empty' }, { status: 400 });
   }
 
@@ -54,7 +57,7 @@ IOCs:
 MITRE:
 - <Txxxx>
 
-Report Text:\n"""\n${content}\n"""`.trim();
+Report Text:\n"""\n${plainTextContent}\n"""`.trim();
 
   let aiOutput = '';
   try {
@@ -74,7 +77,13 @@ Report Text:\n"""\n${content}\n"""`.trim();
 
     const data = await res.json();
     aiOutput = data.choices?.[0]?.message?.content?.trim() || '';
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🧠 AI Output:\n', aiOutput);
+    }
+
   } catch (e) {
+    console.error('❌ AI service error:', e);
     return NextResponse.json({ error: 'AI service failure' }, { status: 502 });
   }
 
@@ -85,20 +94,32 @@ Report Text:\n"""\n${content}\n"""`.trim();
 
   let iocs = cleanListItems(iocRaw, /.+/);
   if (iocs.includes('None Found') || iocs.length === 0) {
-    iocs = extractFallbackIOCs(content);
+    iocs = extractFallbackIOCs(plainTextContent);
   }
 
   let mitreTags = cleanListItems(mitreRaw, /^T\d{4}(\.\d{3})?$/);
   if (mitreTags.includes('None Found') || mitreTags.length === 0) {
-    mitreTags = [...new Set([...content.matchAll(/\bT\d{4}(?:\.\d{3})?\b/g)].map(m => m[0]))];
+    mitreTags = [...new Set([...plainTextContent.matchAll(/\bT\d{4}(?:\.\d{3})?\b/g)].map(m => m[0]))];
   }
 
   try {
     const report = await prisma.report.create({
-      data: { title, content, summary, iocs, mitreTags }
+      data: {
+        title,
+        summary,
+        content: plainTextContent,
+        iocs: {
+          create: iocs.map(value => ({ value }))
+        },
+        mitreTags: {
+          create: mitreTags.map(value => ({ value }))
+        }
+      }
     });
+
     return NextResponse.json({ summary, reportId: report.id });
   } catch (e: any) {
+    console.error('❌ Prisma Error:', e);
     return NextResponse.json({ error: 'Failed to save to database', details: e.message }, { status: 500 });
   }
 }

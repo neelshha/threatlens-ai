@@ -1,9 +1,14 @@
-import { prisma } from '@/app/prisma';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+// src/app/api/reports/[id]/route.ts
 
-export async function GET(req: NextRequest, { params }: any) {
-  const { id } = params;
+import { prisma } from '@/app/prisma';
+import { NextRequest, NextResponse } from 'next/server';
+
+// GET /api/reports/[id]
+export async function GET(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
+  if (!id) {
+    return NextResponse.json({ error: 'Missing report ID' }, { status: 400 });
+  }
 
   try {
     const report = await prisma.report.findUnique({
@@ -24,25 +29,17 @@ export async function GET(req: NextRequest, { params }: any) {
       mitreTags: report.mitreTags.map((t) => t.value),
     });
   } catch (err) {
-    console.error('GET error:', err);
+    console.error('GET /api/reports/[id] failed:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: any) {
-  const { id } = params;
-
-  try {
-    await prisma.report.delete({ where: { id } });
-    return NextResponse.json({ success: true });
-  } catch (err) {
-    console.error('DELETE error:', err);
-    return NextResponse.json({ error: 'Failed to delete report' }, { status: 500 });
+// PATCH /api/reports/[id]
+export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
+  if (!id) {
+    return NextResponse.json({ error: 'Missing report ID' }, { status: 400 });
   }
-}
-
-export async function PATCH(req: NextRequest, { params }: any) {
-  const { id } = params;
 
   try {
     const { title, summary, content, iocs = [], mitreTags = [] } = await req.json();
@@ -58,10 +55,10 @@ export async function PATCH(req: NextRequest, { params }: any) {
           summary,
           content,
           iocs: {
-            create: iocs.filter(Boolean).map((val: string) => ({ value: val })),
+            create: (iocs as string[]).filter(Boolean).map((value) => ({ value })),
           },
           mitreTags: {
-            create: mitreTags.filter(Boolean).map((val: string) => ({ value: val })),
+            create: (mitreTags as string[]).filter(Boolean).map((value) => ({ value })),
           },
         },
         include: {
@@ -77,7 +74,23 @@ export async function PATCH(req: NextRequest, { params }: any) {
       mitreTags: updated.mitreTags.map((t) => t.value),
     });
   } catch (err) {
-    console.error('PATCH error:', err);
+    console.error('PATCH /api/reports/[id] failed:', err);
     return NextResponse.json({ error: 'Failed to update report' }, { status: 500 });
+  }
+}
+
+// DELETE /api/reports/[id]
+export async function DELETE(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
+  if (!id) {
+    return NextResponse.json({ error: 'Missing report ID' }, { status: 400 });
+  }
+
+  try {
+    await prisma.report.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('DELETE /api/reports/[id] failed:', err);
+    return NextResponse.json({ error: 'Failed to delete report' }, { status: 500 });
   }
 }

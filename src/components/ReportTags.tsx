@@ -1,29 +1,33 @@
-// src/components/ReportTags.tsx
+import type { FC } from 'react';
 
-import { getIOCType } from '../lib/iocUtils';
-import { mitreDescriptions } from '../lib/mitreTags';
+interface ReportTagsProps {
+  iocs?: string[];
+  mitreTags?: string[];
+  onRemove: (type: 'ioc' | 'mitre', value: string) => void;
+  type: 'ioc' | 'mitre';
+}
 
-export function ReportTags({ iocs = [], mitreTags = [] }: { iocs?: string[]; mitreTags?: string[] }) {
+export const ReportTags: FC<ReportTagsProps> = ({ iocs, mitreTags, onRemove, type }) => {
+  const tagsToRender = type === 'ioc' ? iocs : mitreTags;
+
+  if (!tagsToRender || tagsToRender.length === 0) {
+    return null;
+  }
+
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-2">
-        {iocs.map((ioc, idx) => (
-          <span key={idx} className="px-2 py-1 text-xs rounded bg-neutral-700 text-white font-mono">
-            {ioc} <span className="opacity-60">({getIOCType(ioc)})</span>
-          </span>
-        ))}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {mitreTags.map((tag, idx) => (
-          <span
-            key={idx}
-            className="px-3 py-1 text-xs rounded-full bg-blue-800/80 text-blue-100 cursor-help"
-            title={mitreDescriptions[tag] || 'Unknown technique'}
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
+    <div className="flex flex-wrap gap-2 mt-2">
+      {tagsToRender.map((tag) => (
+        <button
+          key={tag}
+          onClick={() => onRemove(type, tag)}
+          className={`inline-flex items-center bg-neutral-700 text-neutral-300 text-xs rounded-full px-2 py-1 hover:bg-neutral-600 focus:outline-none`}
+        >
+          {tag}
+          <span className="ml-1 text-neutral-500 cursor-pointer">✕</span>
+        </button>
+      ))}
     </div>
   );
-}
+};
+
+export type { ReportTagsProps };

@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-
 import { type Report } from '@prisma/client';
 import { FormattedDate } from '@/components/FormattedDate';
 import { Loader2, AlertTriangle, FileText } from 'lucide-react';
@@ -20,48 +19,38 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status]);
-
   const [reports, setReports] = useState<ReportFromAPI[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status !== 'authenticated') return;
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
 
+  useEffect(() => {
     const fetchReports = async () => {
-      setLoading(true);
-      setError(null);
       try {
         const res = await fetch('/api/reports');
         if (!res.ok) {
-          let errorMsg = `Failed to fetch reports (Status: ${res.status})`;
-          try {
-            const errData = await res.json();
-            errorMsg = errData.error || errorMsg;
-          } catch {}
-          throw new Error(errorMsg);
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || `Failed to fetch reports (${res.status})`);
         }
-
-        const data = await res.json();
-        setReports(data as ReportFromAPI[]);
-      } catch (err: any) {
+        const data = (await res.json()) as ReportFromAPI[];
+        setReports(data);
+      } catch (err: unknown) {
         console.error('Error fetching reports:', err);
-        setError(err.message || 'An unknown error occurred.');
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
         setReports([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchReports();
+    if (status === 'authenticated') fetchReports();
   }, [status]);
 
-  // Loading NextAuth session
   if (status === 'loading') {
     return (
       <main className="bg-neutral-950 text-white min-h-screen flex items-center justify-center">
@@ -71,7 +60,6 @@ export default function Dashboard() {
     );
   }
 
-  // Loading reports...
   if (loading) {
     return (
       <main className="bg-neutral-950 text-white min-h-screen flex items-center justify-center">
@@ -83,7 +71,6 @@ export default function Dashboard() {
     );
   }
 
-  // Error
   if (error) {
     return (
       <main className="bg-neutral-950 text-white min-h-screen flex items-center justify-center px-4">
@@ -93,7 +80,7 @@ export default function Dashboard() {
           <p className="text-neutral-300 mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-md text-white transition-colors duration-200 text-sm font-medium"
+            className="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-md text-white text-sm font-medium"
           >
             Try Again
           </button>
@@ -102,13 +89,13 @@ export default function Dashboard() {
     );
   }
 
-  // Empty / Data render (rest of your code remains unchanged)
   return (
     <main className="bg-neutral-950 text-white min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-bold text-center text-white mb-10">
+        <h1 className="text-3xl sm:text-4xl font-bold text-center mb-10">
           Stored Threat Reports
         </h1>
+
         {reports.length === 0 ? (
           <div className="text-center text-neutral-400 p-10 mt-8 bg-neutral-800/50 rounded-lg border-2 border-dashed border-neutral-700 max-w-2xl mx-auto">
             <FileText className="w-12 h-12 text-neutral-600 mx-auto mb-4" />
@@ -118,7 +105,12 @@ export default function Dashboard() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {reports.map((report) => (
-              <Link href={`/dashboard/${report.id}`} key={report.id} className="block group">
+              <Link
+                key={report.id}
+                href={`/dashboard/${report.id}`}
+                aria-label={`View report ${report.title}`}
+                className="block group"
+              >
                 <div className="bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg overflow-hidden h-full flex flex-col transition-all duration-300 ease-in-out group-hover:shadow-xl group-hover:border-neutral-600 group-hover:scale-[1.02]">
                   <div className="p-5 flex flex-col flex-grow">
                     <div className="mb-3">
@@ -129,22 +121,26 @@ export default function Dashboard() {
                         Created on <FormattedDate iso={report.createdAt} />
                       </p>
                     </div>
+
                     <p className="text-sm text-neutral-300 line-clamp-4 flex-grow">
                       {report.summary || (
                         <span className="italic text-neutral-500">No summary available.</span>
                       )}
                     </p>
+
                     <div className="mt-3 pt-3 border-t border-neutral-700/50 flex flex-wrap gap-1">
-                      {(report.mitreTags || []).slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-xs bg-blue-900/50 text-blue-300 px-1.5 py-0.5 rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                      {(report.mitreTags || []).slice(0, 3).map((tag) =>
+                        tag ? (
+                          <span
+                            key={tag}
+                            className="text-xs bg-blue-900/50 text-blue-300 px-1.5 py-0.5 rounded-full"
+                          >
+                            {tag}
+                          </span>
+                        ) : null
+                      )}
                       {report.mitreTags && report.mitreTags.length > 3 && (
-                        <span className="text-xs text-neutral-500">...</span>
+                        <span className="text-xs text-neutral-500">+ more</span>
                       )}
                     </div>
                   </div>

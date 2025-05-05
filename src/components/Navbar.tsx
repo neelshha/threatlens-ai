@@ -20,7 +20,8 @@ const Navbar = () => {
   const pathname = usePathname();
   const { data: session, status } = useSession();
 
-  const { data: recentReports = [] } = useSWR<Report[]>('/api/reports', fetcher);
+  const { data, error } = useSWR('/api/reports', fetcher);
+  const recentReports: Report[] = Array.isArray(data) ? data : [];
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -57,12 +58,8 @@ const Navbar = () => {
             ThreatLens AI
           </Link>
           <nav className="flex flex-col space-y-2">
-            <Link href="/" className={getLinkClasses('/', desktopLinkBase, desktopLinkActive, desktopLinkInactive)}>
-              Home
-            </Link>
-            <Link href="/dashboard" className={getLinkClasses('/dashboard', desktopLinkBase, desktopLinkActive, desktopLinkInactive)}>
-              Dashboard
-            </Link>
+            <Link href="/" className={getLinkClasses('/', desktopLinkBase, desktopLinkActive, desktopLinkInactive)}>Home</Link>
+            <Link href="/dashboard" className={getLinkClasses('/dashboard', desktopLinkBase, desktopLinkActive, desktopLinkInactive)}>Dashboard</Link>
           </nav>
 
           <div className="flex flex-col mt-6 flex-1 overflow-hidden">
@@ -109,9 +106,7 @@ const Navbar = () => {
       {/* Mobile Header */}
       <header className={`md:hidden fixed top-0 inset-x-0 bg-neutral-950/95 backdrop-blur-sm border-b border-neutral-800 z-50 transition-shadow duration-300 ease-in-out ${isScrolled ? 'shadow-lg' : ''}`}>
         <div className="flex justify-between items-center px-4 py-3">
-          <Link href="/" className="text-xl font-semibold text-white hover:text-blue-400 transition-colors">
-            ThreatLens AI
-          </Link>
+          <Link href="/" className="text-xl font-semibold text-white hover:text-blue-400 transition-colors">ThreatLens AI</Link>
           <button
             onClick={toggleMobileMenu}
             aria-label="Toggle mobile menu"
@@ -161,7 +156,6 @@ const Navbar = () => {
         </aside>
       </div>
 
-      {/* Custom Scrollbar Styles */}
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;

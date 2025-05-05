@@ -20,8 +20,8 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
 
     return NextResponse.json({
       ...report,
-      iocs: report.iocs.map(i => i.value),
-      mitreTags: report.mitreTags.map(t => t.value),
+      iocs: report.iocs.map((i) => i.value),
+      mitreTags: report.mitreTags.map((t) => t.value),
     });
   } catch (err) {
     console.error('GET error:', err);
@@ -33,14 +33,14 @@ export async function DELETE(req: NextRequest, context: { params: { id: string }
   const { id } = context.params;
 
   try {
-    // Since you have onDelete: Cascade in your schema, you can directly delete the report
-    // and all related records will be automatically deleted
-    await prisma.report.delete({ where: { id } });
+    await prisma.report.delete({
+      where: { id },
+    });
 
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('DELETE error:', err);
-    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to delete report' }, { status: 500 });
   }
 }
 
@@ -50,9 +50,7 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
   try {
     const { title, summary, content, iocs = [], mitreTags = [] } = await req.json();
 
-    // Using a transaction to ensure all operations succeed or fail together
     const updated = await prisma.$transaction(async (tx) => {
-      // Remove existing tags before re-adding
       await tx.ioc.deleteMany({ where: { reportId: id } });
       await tx.mitreTag.deleteMany({ where: { reportId: id } });
 
@@ -78,8 +76,8 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
 
     return NextResponse.json({
       ...updated,
-      iocs: updated.iocs.map(i => i.value),
-      mitreTags: updated.mitreTags.map(t => t.value),
+      iocs: updated.iocs.map((i) => i.value),
+      mitreTags: updated.mitreTags.map((t) => t.value),
     });
   } catch (err) {
     console.error('PATCH error:', err);

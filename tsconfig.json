@@ -13,18 +13,22 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "types": ["node"],
-    "baseUrl": "src", // ✅ remains the same
+    "baseUrl": "src",
     "paths": {
-      "@/*": ["./*"] // ✅ resolves to /src/*
+      "@/*": ["./*"]
     },
     "plugins": [
       {
         "name": "next"
       }
-    ]
+    ],
+    "types": ["next-auth"] // ✅ ensures extended types from next-auth.d.ts are recognized
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"],
-  "types": ["next-auth.d.ts"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "src/types/**/*.d.ts" // ✅ ensures your custom next-auth.d.ts is picked up
+  ],
+  "exclude": ["node_modules"]
 }

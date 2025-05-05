@@ -2,9 +2,7 @@ import { prisma } from '@/app/prisma';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-type RouteParams = { params: Record<string, string> };
-
-export async function GET(req: NextRequest, { params }: RouteParams) {
+export async function GET(req: NextRequest, { params }: any) {
   const { id } = params;
 
   try {
@@ -31,7 +29,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: RouteParams) {
+export async function DELETE(req: NextRequest, { params }: any) {
   const { id } = params;
 
   try {
@@ -43,7 +41,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: RouteParams) {
+export async function PATCH(req: NextRequest, { params }: any) {
   const { id } = params;
 
   try {

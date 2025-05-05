@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/next": "^8.0.7",
     "@types/node": "^20.17.32",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -90,14 +90,8 @@ Report Text:\n"""\n${content}\n"""`;
     aiOutput = data.choices?.[0]?.message?.content?.trim() || '';
 
     if (!aiOutput) {
-      console.warn('⚠️ Empty AI response');
       return NextResponse.json({ error: 'Empty AI response' }, { status: 500 });
     }
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🧠 AI Output:', aiOutput);
-    }
-
   } catch (err) {
     console.error('❌ AI timeout or fetch error:', err);
     return NextResponse.json({ error: 'AI service timeout/failure' }, { status: 502 });
@@ -122,26 +116,29 @@ Report Text:\n"""\n${content}\n"""`;
     console.log('📌 Saving report with:', {
       title,
       summary,
-      content,
+      content: content.slice(0, 150) + '...', // avoid logging full content
       userId,
       iocs,
       mitreTags
     });
-    
+
     const report = await prisma.report.create({
       data: {
         title,
         summary,
         content,
         userId,
-        iocs: { create: iocs.map(value => ({ value })) },
-        mitreTags: { create: mitreTags.map(value => ({ value })) }
+        iocs: iocs.length > 0 ? { create: iocs.map(value => ({ value })) } : undefined,
+        mitreTags: mitreTags.length > 0 ? { create: mitreTags.map(value => ({ value })) } : undefined
       }
     });
 
     return NextResponse.json({ summary, reportId: report.id });
   } catch (e: any) {
-    console.error('❌ DB save error:', e);
-    return NextResponse.json({ error: 'Database error', details: e.message }, { status: 500 });
+    console.error('❌ DB save error:', JSON.stringify(e, null, 2));
+    return NextResponse.json({
+      error: 'Database error',
+      details: e?.message || 'Unknown DB error'
+    }, { status: 500 });
   }
 }

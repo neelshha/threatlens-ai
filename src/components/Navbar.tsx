@@ -76,6 +76,7 @@ const Navbar = () => {
                 </Link>
               ))}
             </div>
+
           </div>
 
           {/* Auth Section */}

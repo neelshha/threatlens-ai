@@ -119,7 +119,15 @@ Report Text:\n"""\n${content}\n"""`;
   }
 
   try {
-    console.log('✨ Creating report for user:', userId);
+    console.log('📌 Saving report with:', {
+      title,
+      summary,
+      content,
+      userId,
+      iocs,
+      mitreTags
+    });
+    
     const report = await prisma.report.create({
       data: {
         title,

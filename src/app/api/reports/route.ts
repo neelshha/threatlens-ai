@@ -13,8 +13,8 @@ export async function GET() {
 
     const formatted = reports.map((report) => ({
       ...report,
-      iocs: report.iocs.map((i) => i.value),
-      mitreTags: report.mitreTags.map((t) => t.value),
+      iocs: report.iocs?.map((i) => i.value) ?? [],
+      mitreTags: report.mitreTags?.map((t) => t.value) ?? [],
     }));
 
     return NextResponse.json(formatted);

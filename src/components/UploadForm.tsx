@@ -5,6 +5,7 @@ import axios from 'axios';
 import type { Message } from '../types/chat';
 import MessageList from './chat/MessageList';
 import ChatInput from './chat/ChatInput';
+import { FiSend, FiPlusCircle } from 'react-icons/fi'; // Import icons
 
 const MAX_HEIGHT = 160;
 
@@ -105,21 +106,39 @@ export default function UploadForm() {
   };
 
   return (
-    <section className="min-h-screen flex flex-col bg-neutral-950 text-white">
-      <div className="flex-grow overflow-y-auto px-4 pt-6 pb-28 w-full max-w-5xl mx-auto relative">
+    <div className="min-h-screen bg-neutral-900 text-neutral-100 flex flex-col">
+      <header className="bg-neutral-800 p-4 flex justify-between items-center shadow-md">
+        <h1 className="text-xl font-semibold">AI Chat</h1>
+        <button
+          onClick={handleNewChat}
+          className="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-1"
+        >
+          <FiPlusCircle className="inline-block mr-2" /> New Chat
+        </button>
+      </header>
+      <main className="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 w-full max-w-3xl mx-auto">
         <MessageList messages={messages} isLoading={isLoading} messagesEndRef={messagesEndRef} />
-      </div>
-
-      <ChatInput
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onSubmit={handleSubmit}
-        onNewChat={handleNewChat}
-        disabled={isLoading}
-        textareaRef={textareaRef}
-        maxHeight={MAX_HEIGHT}
-      />
-    </section>
+      </main>
+      <footer className="bg-neutral-800 p-4 sm:p-6 w-full max-w-3xl mx-auto border-t border-neutral-700">
+        <div className="relative flex items-center">
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask me anything..."
+            className="w-full bg-neutral-700 text-neutral-100 rounded-lg py-2 px-3 pr-12 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none overflow-hidden"
+            style={{ maxHeight: `${MAX_HEIGHT}px` }}
+          />
+          <button
+            onClick={handleSubmit}
+            disabled={isLoading || !input.trim()}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-teal-500 hover:bg-teal-600 text-white rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-1 transition-colors duration-200"
+          >
+            <FiSend className="text-lg" />
+          </button>
+        </div>
+      </footer>
+    </div>
   );
 }

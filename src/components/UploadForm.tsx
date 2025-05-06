@@ -4,23 +4,22 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import type { Message } from '../types/chat';
 import MessageList from './chat/MessageList';
-import ChatInput from './chat/ChatInput'; // Ensure the path is correct
-import { FiPlusCircle } from 'react-icons/fi'; // You might not need this here anymore
+import ChatInput from './chat/ChatInput';
 
 const MAX_HEIGHT = 160;
 
-const generateId = () => Math.random().toString(36).slice(2, 9);
+const generateId = () => Math.random().toString(36).substring(2, 9);
 
-export default function ChatInterface() {
-  const [inputValue, setInputValue] = useState('');
-  const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
+export default function UploadForm() {
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const inputRef = useRef<HTMLTextAreaElement | null>(null); // Match the ref type in ChatInput
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const autoResizeTextarea = useCallback(() => {
-    const textarea = inputRef.current;
+  const resizeTextarea = useCallback(() => {
+    const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
       textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_HEIGHT)}px`;
@@ -28,110 +27,99 @@ export default function ChatInterface() {
   }, []);
 
   useEffect(() => {
-    autoResizeTextarea();
-  }, [inputValue]);
+    resizeTextarea();
+  }, [input]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
+  }, [messages]);
 
-  const handleSendMessage = useCallback(async () => {
-    const messageText = inputValue.trim();
-    if (!messageText || isGeneratingResponse) return;
+  const handleSubmit = useCallback(async () => {
+    const trimmed = input.trim();
+    if (!trimmed || isLoading) return;
 
-    const messageId = generateId();
-    const newUserMessage: Message = { id: `${messageId}-user`, type: 'user', text: messageText };
-    const newAiMessage: Message = { id: `${messageId}-ai`, type: 'ai', text: '', status: 'pending' };
-
-    setChatMessages((prevMessages) => [...prevMessages, newUserMessage, newAiMessage]);
-    setInputValue('');
-    setIsGeneratingResponse(true);
+    const id = generateId();
+    setMessages([
+      { id: `${id}-user`, type: 'user', text: trimmed },
+      { id: `${id}-ai`, type: 'ai', text: '', status: 'pending' }
+    ]);
+    setInput('');
+    setIsLoading(true);
 
     try {
-      const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), 15000);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
 
-      const response = await axios.post<{ summary: string; reportId: string }>(
+      const res = await axios.post<{ summary: string; reportId: string }>(
         '/api/parse',
-        { content: messageText },
-        { signal: abortController.signal }
+        { content: trimmed },
+        { signal: controller.signal }
       );
 
-      clearTimeout(timeoutId);
+      clearTimeout(timeout);
 
-      const { summary, reportId } = response.data;
-      setChatMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.id === `${messageId}-ai`
-            ? { ...msg, text: summary, status: 'complete', reportId }
-            : msg
+      const { summary, reportId } = res.data;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === `${id}-ai`
+            ? { ...m, text: summary, status: 'complete', reportId }
+            : m
         )
       );
-    } catch (error: any) {
-      let errorMessage = 'An unexpected error occurred.';
-      if (axios.isCancel(error)) {
-        errorMessage = 'Request timed out after 15 seconds.';
-      } else if (axios.isAxiosError(error)) {
-        errorMessage = error.response?.data?.error || error.message;
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
+    } catch (err: any) {
+      let message = 'Unknown error.';
+      if (axios.isCancel(err)) {
+        message = 'Timed out after 15 seconds.';
+      } else if (axios.isAxiosError(err)) {
+        message = err.response?.data?.error || err.message;
+      } else if (err instanceof Error) {
+        message = err.message;
       }
 
-      setChatMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.id === `${messageId}-ai`
-            ? { ...msg, text: `⚠️ Analysis Failed: ${errorMessage}`, status: 'error' }
-            : msg
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === `${id}-ai`
+            ? { ...m, text: `⚠️ Analysis Failed: ${message}`, status: 'error' }
+            : m
         )
       );
-      setInputValue(messageText);
-      autoResizeTextarea();
+      setInput(trimmed);
+      resizeTextarea();
     } finally {
-      setIsGeneratingResponse(false);
+      setIsLoading(false);
     }
-  }, [inputValue, isGeneratingResponse, autoResizeTextarea]);
+  }, [input, isLoading, resizeTextarea]);
 
-  const handleEnterKey = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
-      event.preventDefault();
-      handleSendMessage();
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmit();
     }
   };
 
-  const startNewChat = () => {
-    setChatMessages([]);
-    setInputValue('');
-    setIsGeneratingResponse(false);
-    autoResizeTextarea();
+  const handleNewChat = () => {
+    setMessages([]);
+    setInput('');
+    setIsLoading(false);
+    resizeTextarea();
   };
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-neutral-100 flex flex-col">
-      <header className="bg-neutral-800 p-4 flex justify-between items-center shadow-md">
-        <h1 className="text-xl font-semibold">AI Chat</h1>
-        <button
-          onClick={startNewChat}
-          className="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-1"
-        >
-          {/* You might want to use the Plus icon from lucide-react here for consistency */}
-          <FiPlusCircle className="inline-block mr-2" /> New Chat
-        </button>
-      </header>
-      <main className="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 w-full max-w-3xl mx-auto">
-        <MessageList messages={chatMessages} isLoading={isGeneratingResponse} messagesEndRef={messagesEndRef} />
-      </main>
-      <footer className="bg-neutral-800 p-4 sm:p-6 w-full max-w-3xl mx-auto border-t border-neutral-700">
-        <ChatInput
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleEnterKey}
-          onSubmit={handleSendMessage}
-          onNewChat={startNewChat}
-          disabled={isGeneratingResponse}
-          textareaRef={inputRef}
-          maxHeight={MAX_HEIGHT}
-        />
-      </footer>
-    </div>
+    <section className="min-h-screen flex flex-col bg-neutral-950 text-white">
+      <div className="flex-grow overflow-y-auto px-4 pt-6 pb-28 w-full max-w-5xl mx-auto relative">
+        <MessageList messages={messages} isLoading={isLoading} messagesEndRef={messagesEndRef} />
+      </div>
+
+      <ChatInput
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onSubmit={handleSubmit}
+        onNewChat={handleNewChat}
+        disabled={isLoading}
+        textareaRef={textareaRef}
+        maxHeight={MAX_HEIGHT}
+      />
+    </section>
   );
 }

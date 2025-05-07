@@ -18,6 +18,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'ThreatLens AI',
   description: 'AI-powered threat report summarization and analysis tool.',
+  icons: {
+    icon: '/tLens.jpg',
+    shortcut: '/tLens.jpg',
+    apple: '/tLens.jpg',
+  },
 };
 
 export default function RootLayout({

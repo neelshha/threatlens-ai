@@ -17,31 +17,41 @@ export interface Message {
 export const MessageItem: React.FC<{ message: Message }> = ({ message }) => {
   const { type, text, status, reportId } = message;
   const isUser = type === 'user';
-  const containerClass = isUser ? 'justify-end' : 'justify-start';
-  const bubbleClass = isUser
-    ? 'bg-blue-600 text-white'
-    : status === 'error'
-    ? 'bg-red-800/90 border border-red-600/50 text-red-100'
-    : 'bg-neutral-700 text-white';
 
   return (
-    <div className={`mb-5 flex ${containerClass}`}>
-      <div className={`rounded-xl py-2 px-3 max-w-[85%] shadow-md relative ${bubbleClass}`}>
+    <div className={`w-full flex mb-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
+      <div
+        className={`relative px-4 py-2 max-w-[80%] text-sm rounded-2xl shadow ${
+          isUser
+            ? 'bg-[#3942f2] text-white rounded-br-none'
+            : status === 'error'
+            ? 'bg-red-800/90 text-red-100 border border-red-600/50 rounded-bl-none'
+            : 'bg-neutral-700 text-white rounded-bl-none'
+        }`}
+      >
         {!isUser && status === 'pending' ? (
           <ThinkingIndicator />
         ) : (
           <>
-            <div className="prose prose-sm prose-invert max-w-none [&>p]:my-0 whitespace-pre-wrap break-words">
-              <ReactMarkdown>
+            <div className="whitespace-pre-wrap break-words">
+              <ReactMarkdown
+                components={{
+                  p: ({ node, ...props }) => <p className="my-1" {...props} />,
+                }}
+              >
                 {type === 'ai' && status === 'complete'
                   ? `**Analysis Summary:**\n\n${text}`
                   : text}
               </ReactMarkdown>
             </div>
-            {reportId && status === 'complete' && <ReportLink reportId={reportId} />}
+            {reportId && status === 'complete' && (
+              <div className="mt-2">
+                <ReportLink reportId={reportId} />
+              </div>
+            )}
           </>
         )}
       </div>
     </div>
   );
-}; 
+};

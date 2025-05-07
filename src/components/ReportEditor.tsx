@@ -146,7 +146,7 @@ export default function ReportEditor({ id }: ReportEditorProps) {
 
   return (
     <main className="bg-[#020a18] min-h-screen">
-      <div className="max-w-4xl mx-auto rounded-2xl shadow-xl bg-[#0e1629] border border-[#3942f2] p-6 sm:p-8">
+      <div className="mx-auto rounded-2xl shadow-xl bg-[#0e1629]">
         <div className="mb-6">
           <input
             className="text-2xl sm:text-3xl font-bold bg-transparent w-full text-white border-b border-[#3942f2]/40 pb-2 focus:outline-none"

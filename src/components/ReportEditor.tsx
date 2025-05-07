@@ -145,7 +145,7 @@ export default function ReportEditor({ id }: ReportEditorProps) {
   if (error) return <div className="text-red-500 p-6">{error}</div>;
 
   return (
-    <main className="bg-[#020a18] min-h-screen">
+    <main className="flex flex-col min-h-screen bg-[#020a18]">
       <div className="mx-auto bg-[#0e1629] p-6 sm:p-8">
         <div className="mb-6">
           <input

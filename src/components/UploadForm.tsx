@@ -108,7 +108,7 @@ export default function UploadForm() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#020a18] text-[#ffffff]">
-      <div className="flex-grow overflow-y-auto px-4 pt-16 pb-10 w-full max-w-3xl mx-auto flex flex-col items-center justify-center text-center">
+      <div className="flex-grow overflow-y-auto px-4 pt-16 pb-10 w-full max-w-[100%] mx-auto flex flex-col items-center justify-center text-center">
         {messages.length === 0 ? (
           <div className="mb-12">
             <Image

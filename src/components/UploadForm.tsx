@@ -135,7 +135,7 @@ export default function UploadForm() {
       </div>
 
       <div className="sticky bottom-0 bg-[#020a18] p-4">
-        <div className="max-w-6xl mx-auto flex items-center">
+        <div className="max-w-[90%] mx-auto flex items-center">
           <ChatInput
             value={input}
             onChange={(e) => setInput(e.target.value)}

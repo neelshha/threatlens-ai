@@ -10,12 +10,12 @@ interface ReportEditorClientProps {
 const ReportEditor = dynamic(() => import('@/components/ReportEditor'), {
   ssr: false,
   loading: () => (
-    <div className="flex justify-center items-center min-h-[calc(100vh-4rem)] w-full">
-      <div className="flex flex-col items-center gap-4 text-[#a0aaff]">
-        <div className="h-10 w-10 sm:h-12 sm:w-12 border-4 border-[#3942f2] border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm sm:text-base font-medium">Preparing the Report Editor...</p>
+    <main className="bg-[#020a18] text-white min-h-screen flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-8 w-8 sm:h-10 sm:w-10 border-4 border-[#3942f2] border-t-transparent rounded-full animate-spin" />
+        <p className="text-base text-[#8c9eff]">Loading Report Editor...</p>
       </div>
-    </div>
+    </main>
   ),
 });
 

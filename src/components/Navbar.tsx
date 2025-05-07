@@ -14,15 +14,15 @@ interface Report {
   title: string;
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
   const { data: session, status } = useSession();
-  const { data } = useSWR('/api/reports', fetcher);
-  const recentReports: Report[] = Array.isArray(data) ? data : [];
+  const { data } = useSWR<Report[]>('/api/reports', fetcher);
+  const recentReports = Array.isArray(data) ? data : [];
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -32,7 +32,7 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+    setIsMobileMenuOpen(false);
   }, [pathname]);
 
   const linkStyle = (href: string) =>
@@ -47,10 +47,11 @@ const Navbar = () => {
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex fixed inset-y-0 left-0 w-64 bg-[#0e1629] text-neutral-300 border-r border-[#3942f2]/40 flex-col transition-shadow ${isScrolled ? 'shadow-lg' : ''}`}>
         <div className="p-6 flex flex-col h-full">
-          <Link href="/" className="flex items-center gap-3 mb-8 hover:text-[#6570f2]">
-            <Image src={tLogo} alt="Logo" width={28} height={28} className="rounded-sm" />
+          <Link href="/" className="flex items-center gap-3 mb-8 hover:text-[#6570f2] transition">
+            <Image src={tLogo} alt="ThreatLens AI Logo" width={28} height={28} className="rounded-sm" />
             <span className="text-2xl font-bold text-white">ThreatLens AI</span>
           </Link>
+
           <nav className="flex flex-col gap-2">
             <Link href="/" className={linkStyle('/')}>Home</Link>
             <Link href="/dashboard" className={linkStyle('/dashboard')}>Dashboard</Link>
@@ -58,7 +59,7 @@ const Navbar = () => {
 
           <div className="flex flex-col mt-6 flex-1 overflow-hidden">
             <h3 className="text-xs font-semibold text-[#7681f7] uppercase mb-2 px-2">Recent Reports</h3>
-            <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-[#3942f2]/70 scrollbar-track-transparent">
+            <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-[#3942f2]/70">
               {recentReports.map((report) => (
                 <Link
                   key={report.id}
@@ -99,18 +100,23 @@ const Navbar = () => {
       <header className="md:hidden fixed top-0 inset-x-0 z-50 bg-[#0e1629] border-b border-[#3942f2]/40">
         <div className="flex items-center justify-between px-4 py-3">
           <Link href="/" className="flex items-center gap-2 text-white text-xl font-bold">
-            <Image src={tLogo} alt="Logo" width={24} height={24} className="rounded-sm" />
+            <Image src={tLogo} alt="ThreatLens AI Logo" width={24} height={24} className="rounded-sm" />
             ThreatLens AI
           </Link>
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Toggle menu">
-            {isMobileMenuOpen ? <X className="text-white" /> : <Menu className="text-white" />}
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Toggle Menu">
+            {isMobileMenuOpen ? <X className="text-white w-6 h-6" /> : <Menu className="text-white w-6 h-6" />}
           </button>
         </div>
       </header>
 
       {/* Mobile Drawer */}
-      <div className={`md:hidden fixed top-0 left-0 h-full w-64 bg-[#0e1629] border-r border-[#3942f2]/40 transform transition-transform duration-300 z-40 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-6 mt-15 flex flex-col h-full">
+      <div
+        className={`md:hidden fixed top-0 left-0 h-full w-64 bg-[#0e1629] border-r border-[#3942f2]/40 transform transition-transform duration-300 z-40 ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        style={{ marginTop: '60px' }}
+      >
+        <div className="p-6 flex flex-col h-[calc(100%-60px)] overflow-y-auto">
           <nav className="flex flex-col gap-3">
             <Link href="/" className={linkStyle('/')} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
             <Link href="/dashboard" className={linkStyle('/dashboard')} onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
@@ -122,15 +128,15 @@ const Navbar = () => {
               <Link
                 key={report.id}
                 href={`/dashboard/${report.id}`}
-                className="block text-sm text-neutral-300 hover:text-white py-1.5 truncate"
                 onClick={() => setIsMobileMenuOpen(false)}
+                className="block text-sm text-neutral-300 hover:text-white py-1.5 truncate"
               >
                 {report.title}
               </Link>
             ))}
           </div>
 
-          <div className="mt-5 text-sm">
+          <div className="mt-6 text-sm">
             {status === 'authenticated' ? (
               <div className="text-white space-y-2">
                 <p className="text-xs text-[#7681f7]">Signed in as</p>

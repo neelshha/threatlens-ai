@@ -36,7 +36,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <div className="w-full px-4 pb-6 sticky bottom-0 bg-[#020a18] z-10">
-  <div className="max-w-4xl mx-auto relative border border-[#3942f2] bg-[#0e1629] rounded-[28px] px-4 pt-3 pb-[52px]">
+  <div className="max-w-4xl mx-auto relative border border-[#3942f2]/40 bg-[#0e1629] rounded-[28px] px-4 pt-3 pb-[52px]">
 
     {/* Textarea that grows */}
     <textarea

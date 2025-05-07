@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { Menu, X } from 'lucide-react';
 import useSWR from 'swr';
+import Image from 'next/image';
+import tLogo from '/public/tLens.jpg';
 
 interface Report {
   id: string;
@@ -45,10 +46,11 @@ const Navbar = () => {
 
   return (
     <>
-      <aside className={`hidden md:flex fixed inset-y-0 left-0 w-64 bg-[#0e1629] text-neutral-300 border-r border-[#3942f2] flex-col transition-shadow ${isScrolled ? 'shadow-lg' : ''}`}>
+      <aside className={`hidden md:flex fixed inset-y-0 left-0 w-64 bg-[#0e1629] text-neutral-300 border-r border-[#3942f2]/40 flex-col transition-shadow ${isScrolled ? 'shadow-lg' : ''}`}>
         <div className="p-6 flex flex-col h-full">
-          <Link href="/" className="text-2xl font-bold text-white mb-8 hover:text-[#6570f2]">
-            ThreatLens AI
+          <Link href="/" className="flex items-center gap-3 mb-8 hover:text-[#6570f2]">
+            <Image src={tLogo} alt="Logo" width={28} height={28} className="rounded-sm" />
+            <span className="text-2xl font-bold text-white">ThreatLens AI</span>
           </Link>
           <nav className="flex flex-col gap-2">
             <Link href="/" className={linkStyle('/', pathname)}>Home</Link>

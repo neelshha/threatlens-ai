@@ -1,26 +1,28 @@
-# CTI GPT
+# ThreatLens AI
 
-CTI GPT is a Next.js application bootstrapped with `create-next-app`. It leverages the latest Next.js App Router, automatic font optimization with the Geist font from Vercel, and comes preconfigured for rapid development and deployment.
-
-## Demo
-
-<!-- Include a screenshot or link to a live demo if available -->
-![App Screenshot](./public/screenshot.png)
+ThreatLens AI is a Next.js application that provides advanced threat intelligence and analysis capabilities. Built with modern web technologies and best practices for security analysis.
 
 ## Features
 
-- Built with Next.js App Router
-- Automatic font optimization using `next/font` and the Geist font
-- Hot reloading during development
-- Zero-config TypeScript support
+- Modern Next.js App Router architecture
+- Authentication with NextAuth.js
+- Database integration with Prisma
+- Real-time data fetching with SWR
+- DOCX export capabilities
+- Responsive UI with Tailwind CSS
+- Markdown rendering support
+- Toast notifications for user feedback
 
 ## Tech Stack
 
-- Next.js
-- React
+- Next.js 15
+- React 19
 - TypeScript
-- Tailwind CSS (optional)
-- Vercel for deployment
+- Prisma (Database ORM)
+- Tailwind CSS
+- NextAuth.js
+- SWR (Data fetching)
+- Export libraries (docx)
 
 ## Getting Started
 
@@ -28,73 +30,76 @@ CTI GPT is a Next.js application bootstrapped with `create-next-app`. It leverag
 
 - Node.js v14 or later
 - npm or Yarn
+- PostgreSQL (or your preferred database)
 
 ### Installation
 
 ```bash
-git clone <https://github.com/neelshha/threatlens-ai.git>
-cd cti-gpt
+git clone https://github.com/neelshha/threatlens-ai.git
+cd threatlens-ai
 npm install
-# or
-# yarn install
+```
+
+### Environment Setup
+
+Create a `.env` file in the root directory with the following variables:
+
+```dotenv
+DATABASE_URL="your_database_connection_string"
+NEXTAUTH_SECRET="your_nextauth_secret"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+### Database Setup
+
+```bash
+npx prisma generate
+npx prisma db push
 ```
 
 ### Running Locally
 
 ```bash
 npm run dev
-# or
-# yarn dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
 
 ## Available Scripts
 
-In the project directory, you can run:
-
 ```bash
-npm run dev    # Start development server
-npm run build  # Build for production
-npm start      # Start production server
-npm run lint   # Run code linter
-``` 
-
-## Folder Structure
-
-```bash
-cti-gpt/
-├── app/              # Main application directory (Next.js App Router)
-├── components/       # Reusable UI components
-├── public/           # Static assets (images, fonts, etc.)
-├── styles/           # Global and component-level styles
-├── next.config.js    # Next.js configuration file
-└── README.md         # Project README
+npm run dev     # Start development server
+npm run build   # Generate Prisma client and build for production
+npm start       # Start production server
+npm run lint    # Run code linter
 ```
 
-## Environment Variables
+## Project Structure
 
-If your project requires environment variables, create a `.env.local` in the root directory and add:
-
-```dotenv
-# Example
-NEXT_PUBLIC_API_URL=https://api.example.com
+```bash
+threatlens-ai/
+├── src/              # Source code directory
+├── public/           # Static assets
+├── prisma/          # Database schema and migrations
+├── types/           # TypeScript type definitions
+├── components/      # Reusable UI components
+├── next.config.ts   # Next.js configuration
+├── tailwind.config.js # Tailwind CSS configuration
+└── package.json     # Project dependencies and scripts
 ```
 
 ## Deployment
 
-This project is configured for deployment on Vercel:
+The project is configured for deployment on Vercel:
 
-1. Push your code to a Git repository (e.g., GitHub).
-2. Import the repository in Vercel.
-3. Set build command to `npm run build` and the output directory to `.next`.
-4. Deploy and enjoy automatic previews.
-
-For more details, see the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying).
+1. Push your code to a Git repository
+2. Import the repository in Vercel
+3. Configure environment variables
+4. Deploy and enjoy automatic previews
 
 ## Contributing
 
-Contributions are welcome! Feel free to open issues or submit pull requests.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 

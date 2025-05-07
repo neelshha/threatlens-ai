@@ -28,7 +28,7 @@ const ReportEditorClient: FC<ReportEditorClientProps> = ({ reportId }) => {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="w-full">
       <div className="sm:p-6">
         <ReportEditor id={reportId} />
       </div>

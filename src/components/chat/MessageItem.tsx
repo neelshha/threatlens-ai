@@ -21,7 +21,7 @@ export const MessageItem: React.FC<{ message: Message }> = ({ message }) => {
   return (
     <div className={`w-full flex mb-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`relative px-4 py-2 max-w-[80%] text-sm rounded-2xl shadow ${
+        className={`relative px-4 py-2 max-w-[90%] text-sm rounded-2xl shadow text-left ${
           isUser
             ? 'bg-[#3942f2] text-white rounded-br-none'
             : status === 'error'
@@ -33,7 +33,7 @@ export const MessageItem: React.FC<{ message: Message }> = ({ message }) => {
           <ThinkingIndicator />
         ) : (
           <>
-            <div className="whitespace-pre-wrap break-words">
+            <div className="whitespace-pre-wrap break-words text-left">
               <ReactMarkdown
                 components={{
                   p: ({ node, ...props }) => <p className="my-1" {...props} />,

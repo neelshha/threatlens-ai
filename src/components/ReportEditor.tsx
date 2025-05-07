@@ -118,7 +118,6 @@ export default function ReportEditor({ id }: ReportEditorProps) {
   const handleDownloadDocx = async () => {
     const doc = new Document({
       sections: [{
-        properties: {},
         children: [
           new Paragraph({ text: editableTitle, heading: HeadingLevel.HEADING_1 }),
           new Paragraph({ text: 'Summary', heading: HeadingLevel.HEADING_2 }),
@@ -145,17 +144,17 @@ export default function ReportEditor({ id }: ReportEditorProps) {
   if (error) return <div className="text-red-500 p-6">{error}</div>;
 
   return (
-    <main className="flex flex-col min-h-screen bg-[#020a18]">
-      <div className="mx-auto bg-[#0e1629] p-6 sm:p-8">
-        <div className="mb-6">
+    <main className="min-h-screen bg-[#020a18] py-10 px-4 flex justify-center">
+      <div className="w-full max-w-5xl bg-[#0e1629] p-6 sm:p-8 rounded-xl border border-[#3942f2] shadow-xl space-y-8">
+        <div>
           <input
-            className="text-2xl sm:text-3xl font-bold bg-transparent w-full text-white border-b border-[#3942f2]/40 pb-2 focus:outline-none"
+            className="text-3xl font-bold w-full bg-transparent text-white border-b border-[#3942f2]/40 pb-2 focus:outline-none placeholder:text-neutral-500"
             value={editableTitle}
-            onChange={e => setEditableTitle(e.target.value)}
+            onChange={(e) => setEditableTitle(e.target.value)}
             onBlur={debouncedUpdate}
             placeholder="Untitled Report"
           />
-          {savingStatus && <div className="text-green-400 text-sm mt-1">{savingStatus}</div>}
+          {savingStatus && <p className="text-green-400 text-sm mt-1">{savingStatus}</p>}
           {report?.createdAt && (
             <p className="text-sm text-neutral-400 mt-1">
               Published on <FormattedDate iso={report.createdAt} />
@@ -163,32 +162,32 @@ export default function ReportEditor({ id }: ReportEditorProps) {
           )}
         </div>
 
-        <div className="mb-6">
-          <label htmlFor="summary" className="block text-neutral-300 text-sm font-medium mb-1">Summary</label>
+        <div>
+          <label htmlFor="summary" className="block text-sm font-medium text-neutral-300 mb-2">Summary</label>
           <textarea
             id="summary"
-            className="w-full bg-[#121b30] text-white text-sm rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-[#3942f2]"
+            className="w-full bg-[#121b30] text-white text-sm rounded-md p-3 focus:ring-2 focus:ring-[#3942f2] focus:outline-none"
             rows={3}
             value={editableSummary}
-            onChange={e => setEditableSummary(e.target.value)}
+            onChange={(e) => setEditableSummary(e.target.value)}
             onBlur={debouncedUpdate}
-            placeholder="Provide a brief summary of the report..."
+            placeholder="Brief summary of the threat report..."
           />
         </div>
 
-        <div className="mb-6">
-          <label htmlFor="iocs" className="block text-neutral-300 text-sm font-medium mb-2">Indicators of Compromise (IOCs)</label>
-          <div className="flex items-center space-x-2 mb-2">
+        <div>
+          <label htmlFor="iocs" className="block text-sm font-medium text-neutral-300 mb-2">Indicators of Compromise (IOCs)</label>
+          <div className="flex gap-2 mb-2">
             <input
               ref={iocInputRef}
               id="iocs"
-              className="bg-[#121b30] text-white text-sm rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-[#3942f2] flex-grow"
-              placeholder="Add IOC (e.g., IP address, domain)"
-              onKeyDown={e => e.key === 'Enter' && addTag('ioc', e.currentTarget.value)}
+              className="flex-grow bg-[#121b30] text-white text-sm rounded-md p-2 focus:ring-2 focus:ring-[#3942f2] focus:outline-none"
+              placeholder="Add IOC (e.g., IP, domain)"
+              onKeyDown={(e) => e.key === 'Enter' && addTag('ioc', e.currentTarget.value)}
             />
             <button
               onClick={() => iocInputRef.current?.value && addTag('ioc', iocInputRef.current.value)}
-              className="bg-[#3942f2] hover:bg-[#4a52f4] text-white rounded-md px-3 py-2 text-sm focus:outline-none"
+              className="bg-[#3942f2] hover:bg-[#4a52f4] text-white text-sm rounded-md px-4 py-2"
             >
               Add
             </button>
@@ -196,19 +195,19 @@ export default function ReportEditor({ id }: ReportEditorProps) {
           <ReportTags iocs={editableIOCs} onRemove={removeTag} type="ioc" />
         </div>
 
-        <div className="mb-6">
-          <label htmlFor="mitre" className="block text-neutral-300 text-sm font-medium mb-2">MITRE ATT&CK Tags</label>
-          <div className="flex items-center space-x-2 mb-2">
+        <div>
+          <label htmlFor="mitre" className="block text-sm font-medium text-neutral-300 mb-2">MITRE ATT&CK Tags</label>
+          <div className="flex gap-2 mb-2">
             <input
               ref={mitreInputRef}
               id="mitre"
-              className="bg-[#121b30] text-white text-sm rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-yellow-500 flex-grow"
+              className="flex-grow bg-[#121b30] text-white text-sm rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
               placeholder="Add MITRE Txxxx"
-              onKeyDown={e => e.key === 'Enter' && addTag('mitre', e.currentTarget.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addTag('mitre', e.currentTarget.value)}
             />
             <button
               onClick={() => mitreInputRef.current?.value && addTag('mitre', mitreInputRef.current.value)}
-              className="bg-yellow-500 hover:bg-yellow-600 text-black rounded-md px-3 py-2 text-sm focus:outline-none"
+              className="bg-yellow-500 hover:bg-yellow-600 text-black text-sm rounded-md px-4 py-2"
             >
               Add
             </button>
@@ -216,31 +215,31 @@ export default function ReportEditor({ id }: ReportEditorProps) {
           <ReportTags mitreTags={editableMitreTags} onRemove={removeTag} type="mitre" />
         </div>
 
-        <div className="mb-8">
-          <label htmlFor="content" className="block text-neutral-300 text-sm font-medium mb-1">Content</label>
+        <div>
+          <label htmlFor="content" className="block text-sm font-medium text-neutral-300 mb-2">Content</label>
           <textarea
             id="content"
-            className="w-full bg-[#121b30] text-white text-sm rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-[#3942f2] min-h-[200px]"
+            className="w-full min-h-[200px] bg-[#121b30] text-white text-sm rounded-md p-3 focus:ring-2 focus:ring-[#3942f2] focus:outline-none"
             rows={10}
             value={editableContent}
-            onChange={e => setEditableContent(e.target.value)}
+            onChange={(e) => setEditableContent(e.target.value)}
             onBlur={debouncedUpdate}
-            placeholder="Enter the main content of the report..."
+            placeholder="Enter detailed report content..."
           />
         </div>
 
-        <div className="flex flex-wrap gap-3 justify-end">
+        <div className="flex flex-wrap justify-end gap-3">
           <button
             onClick={handleDownloadDocx}
-            className="bg-purple-600 hover:bg-purple-700 text-white rounded-md px-4 py-2 text-sm focus:outline-none flex items-center"
+            className="bg-purple-600 hover:bg-purple-700 text-white rounded-md px-4 py-2 text-sm flex items-center"
           >
-            <Download className="mr-2" size={16} /> Download DOCX
+            <Download size={16} className="mr-2" /> Download DOCX
           </button>
           <button
             onClick={handleDelete}
-            className="bg-red-600 hover:bg-red-700 text-white rounded-md px-4 py-2 text-sm focus:outline-none flex items-center"
+            className="bg-red-600 hover:bg-red-700 text-white rounded-md px-4 py-2 text-sm flex items-center"
           >
-            <Trash className="mr-2" size={16} /> Delete
+            <Trash size={16} className="mr-2" /> Delete
           </button>
         </div>
       </div>

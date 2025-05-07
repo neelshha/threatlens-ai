@@ -23,6 +23,28 @@ export const metadata: Metadata = {
     shortcut: '/tLens.jpg',
     apple: '/tLens.jpg',
   },
+  openGraph: {
+    title: 'ThreatLens AI',
+    description: 'AI-powered threat report summarization and analysis tool.',
+    url: 'https://www.neelshha.com/threatlens', // Update to your real domain
+    siteName: 'ThreatLens AI',
+    images: [
+      {
+        url: '/preview.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'ThreatLens AI Preview',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ThreatLens AI',
+    description: 'AI-powered threat report summarization and analysis tool.',
+    images: ['/preview.jpg'],
+    creator: '@neelshha', // optional, add only if you have a Twitter handle
+  },
 };
 
 export default function RootLayout({

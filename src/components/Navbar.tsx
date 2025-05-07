@@ -110,7 +110,7 @@ const Navbar = () => {
 
       {/* Mobile Drawer */}
       <div className={`md:hidden fixed top-0 left-0 h-full w-64 bg-[#0e1629] border-r border-[#3942f2]/40 transform transition-transform duration-300 z-40 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-6 mt-10 flex flex-col h-full">
+        <div className="p-6 mt-15 flex flex-col h-full">
           <nav className="flex flex-col gap-3">
             <Link href="/" className={linkStyle('/')} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
             <Link href="/dashboard" className={linkStyle('/dashboard')} onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
@@ -130,7 +130,7 @@ const Navbar = () => {
             ))}
           </div>
 
-          <div className="mt-6 text-sm">
+          <div className="mt-5 text-sm">
             {status === 'authenticated' ? (
               <div className="text-white space-y-2">
                 <p className="text-xs text-[#7681f7]">Signed in as</p>

@@ -11,7 +11,7 @@ const ReportEditor = dynamic(() => import('@/components/ReportEditor'), {
   ssr: false,
   loading: () => (
     <div className="flex flex-col items-center justify-center h-48 w-full">
-      <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-t-4 border-b-4 border-[#3942f2]" />
+      <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16" />
       <p className="mt-4 text-sm text-neutral-500">Preparing the editor...</p>
     </div>
   ),
